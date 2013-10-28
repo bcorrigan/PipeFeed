@@ -46,6 +46,8 @@ fetchFeed feedcfg = do
                                         , body=maybe "nowt" fst3 (getItemEnclosure item)
                                         , author=fromMaybe "Unknown author" (getItemAuthor item)
                                         , itemurl=fromMaybe "Unknown url" (getItemLink item)
+                                        , transformed=False
+                                        , cached=False
                                         , hash="TODO"} ) items
                         
                         return ( feedcfg{ items=articles } ) 
@@ -53,6 +55,31 @@ fetchFeed feedcfg = do
 --haskell doesn't have basic triple-or-above manip funcs, wtf?
 fst3::(a,b,c)->a
 fst3 (a,b,c) = a
+
+--any on disk should be loaded
+--this loads body into matching article, and marks that article as transformed
+loadCache :: Config -> Feed -> IO Feed
+loadCache cfg feed = undefined
+
+--writes any uncached, marking cached
+writeCache  :: Config -> Feed -> IO(Feed)
+writeCache cfg feed = undefined
+
+--zaps any articles on disk not in the passed feed
+deleteCache :: Config -> Feed -> IO()
+deleteCache cfg feed = undefined
+
+hashFeed :: Feed -> Feed
+hashFeed feed = undefined
+
+--apply the transforms in order
+--also marks transformed
+transform :: Feed -> IO Feed
+transform feed = undefined
+
+--write the resulting feed
+write :: Config -> Feed -> IO()
+write cfg feed = undefined
                      
 --readConfig :: String -> Config 
 --readConfig config = 

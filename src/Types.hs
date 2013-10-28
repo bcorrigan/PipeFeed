@@ -9,6 +9,8 @@ data Article = Article { title :: String
                    , author :: String
                    , itemurl :: String
                    , hash :: String
+                   , transformed :: Bool
+                   , cached :: Bool
                    } deriving Show
                    
 data Feed = Feed { name :: String
@@ -26,4 +28,5 @@ instance Show Feed where
         show f = "Feed. name: " ++ name f ++ " feedurl: " ++ (show $ feedurl f) ++ " num items: " ++ (show $ length $ items f) ++ " Items:" ++ (intercalate ", " (map show (items f))) ++ " num transforms: " ++ (show $ length $ transforms f)
 
 --newBody :: Article -> Article
---newBody a = 
+--newBody a =
+

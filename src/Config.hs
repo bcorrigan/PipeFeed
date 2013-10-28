@@ -48,10 +48,6 @@ get_feed cfg feed = do
                                 
                         return ( Feed{name=feed, items=[], feedurl=url, transforms=transforms} )
                         
-get_transform::C.Config -> String -> IO()
-get_transform cfg transform = do 
-                        
-                        return ()
 
 instance C.Configured [String] where
         convert (C.List vals) = Just $ map fromJust $ map (fmap unpack . convert) vals
