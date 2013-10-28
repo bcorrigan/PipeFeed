@@ -8,7 +8,7 @@ data Article = Article { title :: String
                    , body :: String
                    , author :: String
                    , itemurl :: String
-                   , hash :: String
+                   , bodyhash :: Maybe Int
                    , transformed :: Bool
                    , cached :: Bool
                    } deriving Show
