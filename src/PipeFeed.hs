@@ -16,9 +16,14 @@ import Data.Hashable(hash)
 main::IO()
 main = do 
         config <- Conf.configure "/home/bc/workspace/PipeFeed/feeds.config"
-        done <- sequence $ map fetchFeed (feeds config)
+        feeds <- mapM fetchFeed (feeds config)
+        cachedFeeds <- mapM (loadCache config . hashFeed) feeds
+        transformedFeeds <- mapM transform cachedFeeds
+        cachedFeeds <- mapM (writeCache config) transformedFeeds
+        mapM_ (deleteCache config) cachedFeeds
+        mapM_ (write config) cachedFeeds
         
-        print done
+        print feeds
         
         return ()
 
@@ -28,9 +33,7 @@ fetchFeed feedcfg = do
                         rsp <- simpleHTTP (getRequest url) -- >>= fmap (take 100) . getResponseBody
                         feedText <- getResponseBody rsp
                         print feedText
-                        let feed = case (parseFeedString feedText) of
-                                Just f -> f
-                                Nothing -> error "Can't get feed" 
+                        let feed = fromMaybe (error "Can't get feed") (parseFeedString feedText) 
                         
                         let items = feedItems feed
                         let title = getFeedTitle feed
@@ -63,7 +66,7 @@ loadCache :: Config -> Feed -> IO Feed
 loadCache cfg feed = undefined
 
 --writes any uncached, marking cached
-writeCache  :: Config -> Feed -> IO(Feed)
+writeCache  :: Config -> Feed -> IO Feed
 writeCache cfg feed = undefined
 
 --zaps any articles on disk not in the passed feed
@@ -73,7 +76,7 @@ deleteCache cfg feed = undefined
 hashFeed :: Feed -> Feed
 hashFeed feed = feed{items=map (\(a,h) -> a{bodyhash=Just h}) 
                                (zip (items feed) 
-                                   (map hash $ map body $ items feed))} 
+                                   (map (hash . body) (items feed)))} 
 
 --apply the transforms in order
 --also marks transformed

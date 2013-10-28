@@ -21,7 +21,7 @@ data Feed = Feed { name :: String
                  
 data Config = Config { feeds :: [Feed]
                      , cache :: String
-                     , rss_store :: String
+                     , rssStore :: String
                      } deriving Show
                      
 instance Show Feed where

@@ -15,7 +15,7 @@ fetchfull article = do
 --new body only has content between start_re and end_re                        
 regexsnip::String -> String -> Article -> IO Article
 regexsnip start_re end_re article = do
-                        let (_,_,post) = (body article) =~ start_re :: (String, String, String)
+                        let (_,_,post) = body article =~ start_re :: (String, String, String)
                         let (newbody,_,_) = post =~ end_re :: (String,String,String)
                         return $ article { body=newbody }
 
