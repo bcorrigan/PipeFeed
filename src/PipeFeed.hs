@@ -9,6 +9,7 @@ import Text.Feed.Query
 import Network.URI
 import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
 import Data.Maybe(fromMaybe,maybe)
+import Data.Hashable(hash) 
 
 --test
 
@@ -48,7 +49,7 @@ fetchFeed feedcfg = do
                                         , itemurl=fromMaybe "Unknown url" (getItemLink item)
                                         , transformed=False
                                         , cached=False
-                                        , hash="TODO"} ) items
+                                        , bodyhash=Nothing} ) items
                         
                         return ( feedcfg{ items=articles } ) 
 
@@ -70,7 +71,9 @@ deleteCache :: Config -> Feed -> IO()
 deleteCache cfg feed = undefined
 
 hashFeed :: Feed -> Feed
-hashFeed feed = undefined
+hashFeed feed = feed{items=map (\(a,h) -> a{bodyhash=Just h}) 
+                               (zip (items feed) 
+                                   (map hash $ map body $ items feed))} 
 
 --apply the transforms in order
 --also marks transformed
