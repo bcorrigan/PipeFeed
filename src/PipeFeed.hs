@@ -10,6 +10,7 @@ import Network.URI
 import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
 import Data.Maybe(fromMaybe,maybe)
 import Data.Hashable(hash) 
+import System.Directory
 
 --test
 
@@ -63,7 +64,22 @@ fst3 (a,b,c) = a
 --any on disk should be loaded
 --this loads body into matching article, and marks that article as transformed
 loadCache :: Config -> Feed -> IO Feed
-loadCache cfg feed = undefined
+loadCache cfg feed = do
+                        createDirectoryIfMissing False  $ cache cfg
+
+                        existing <- mapM (doesFileExist . mkPath cfg) 
+                                                                    (items feed)                 
+                        bodies <- mapM (\ (exists, item) -> if exists
+                                                then readFile $ mkPath cfg item 
+                                                else return $ body item)
+                                                  (zip existing (items feed))
+                                                
+                        let newItems= map (\ (body, item) -> item{body=body}) (zip bodies (items feed))
+                        
+                        return feed{items=newItems}
+
+mkPath :: Config -> Article -> FilePath
+mkPath cfg item = cache cfg ++ "/" ++ show (fromMaybe 0 (bodyhash item)) ++ ".xml"
 
 --writes any uncached, marking cached
 writeCache  :: Config -> Feed -> IO Feed
