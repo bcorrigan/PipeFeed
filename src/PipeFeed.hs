@@ -70,13 +70,16 @@ loadCache cfg feed = do
                         existing <- mapM (doesFileExist . mkPath cfg) 
                                                                     (items feed)                 
                         bodies <- mapM (\ (exists, item) -> if exists
-                                                then readFile $ mkPath cfg item 
-                                                else return $ body item)
+                                                then readFile $ mkPath cfg item  
+                                                else return $ body item )
                                                   (zip existing (items feed))
                                                 
                         let newItems= map (\ (body, item) -> item{body=body}) (zip bodies (items feed))
                         
-                        return feed{items=newItems}
+                        return feed{items = markTransformed newItems existing}
+
+markTransformed :: [Article] -> [Bool] -> [Article]
+markTransformed items transfms = map (\ (item, transformed) -> item{transformed=transformed}) (zip items transfms)
 
 mkPath :: Config -> Article -> FilePath
 mkPath cfg item = cache cfg ++ "/" ++ show (fromMaybe 0 (bodyhash item)) ++ ".xml"
