@@ -19,11 +19,11 @@ main::IO()
 main = do 
         config <- Conf.configure "/home/bc/workspace/PipeFeed/feeds.config"
         feeds <- mapM fetchFeed (feeds config)
-        cachedFeeds <- mapM (loadCache config . hashFeed) feeds
-        transformedFeeds <- mapM transform cachedFeeds
-        cachedFeeds <- mapM (writeCache config) transformedFeeds
-        mapM_ (deleteCache config) cachedFeeds
-        mapM_ (write config) cachedFeeds
+        feeds <- mapM (loadCache config . hashFeed) feeds
+        feeds <- mapM transform feeds
+        mapM_ (writeCache config) feeds
+        mapM_ (deleteCache config) feeds
+        mapM_ (write config) feeds
         
         print feeds
         
@@ -85,9 +85,10 @@ markTransformed items transfms = map (\ (item, transformed) -> item{transformed=
 mkPath :: Config -> Article -> FilePath
 mkPath cfg item = cache cfg ++ "/" ++ show (fromMaybe 0 (bodyhash item)) ++ ".xml"
 
---writes any uncached, marking cached
-writeCache  :: Config -> Feed -> IO Feed
-writeCache cfg feed = undefined
+--writes any uncached
+writeCache  :: Config -> Feed -> IO ()
+writeCache cfg feed = mapM_ (\i -> writeFile (mkPath cfg i) (body i))    
+                            (filter (not . cached) (items feed))
 
 --zaps any articles on disk not in the passed feed
 deleteCache :: Config -> Feed -> IO()
@@ -104,7 +105,7 @@ transform :: Feed -> IO Feed
 transform feed = do
                     articles<-mapM (\article -> 
                         if transformed article 
-                        then return article
+                        then return article{transformed=True}
                         else applyTransforms article
                       ) (items feed) 
 
