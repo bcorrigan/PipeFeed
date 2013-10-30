@@ -11,6 +11,7 @@ import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
 import Data.Maybe(fromMaybe,maybe)
 import Data.Hashable(hash) 
 import System.Directory
+import Control.Monad(foldM)
 
 --test
 
@@ -100,8 +101,19 @@ hashFeed feed = feed{items=map (\(a,h) -> a{bodyhash=Just h})
 --apply the transforms in order
 --also marks transformed
 transform :: Feed -> IO Feed
-transform feed = undefined
+transform feed = do
+                    articles<-mapM (\article -> 
+                        if transformed article 
+                        then return article
+                        else applyTransforms article
+                      ) (items feed) 
 
+                    return feed{items=articles}
+                    
+                    where transpairs = map (\a -> (transformed a, a)) (items feed)
+                          applyTransforms :: Article -> IO Article
+                          applyTransforms article = foldM (\acc f -> (f acc)) article
+                                                             (transforms feed)
 --write the resulting feed
 write :: Config -> Feed -> IO()
 write cfg feed = undefined
