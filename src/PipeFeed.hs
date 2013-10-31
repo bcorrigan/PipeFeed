@@ -122,8 +122,7 @@ transform feed = do
 
                     return feed{items=articles}
                     
-                    where --transpairs = map (\a -> (transformed a, a)) (items feed)
-                          applyTransforms :: Article -> IO Article
+                    where applyTransforms :: Article -> IO Article
                           applyTransforms article = foldM (\acc f -> (f acc)) article
                                                              (transforms feed)
 --write the resulting feed
