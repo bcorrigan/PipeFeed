@@ -12,6 +12,7 @@ import Data.Maybe(fromMaybe,maybe)
 import Data.Hashable(hash) 
 import System.Directory
 import Control.Monad(foldM)
+import Data.List
 
 --test
 
@@ -83,7 +84,7 @@ markTransformed :: [Article] -> [Bool] -> [Article]
 markTransformed items transfms = map (\ (item, transformed) -> item{transformed=transformed}) (zip items transfms)
 
 mkPath :: Config -> Article -> FilePath
-mkPath cfg item = cache cfg ++ "/" ++ show (fromMaybe 0 (bodyhash item)) ++ ".xml"
+mkPath cfg item = cache cfg ++ "/" ++ show (fromMaybe 0 (bodyhash item))
 
 --writes any uncached
 writeCache  :: Config -> Feed -> IO ()
@@ -92,8 +93,18 @@ writeCache cfg feed = mapM_ (\i -> writeFile (mkPath cfg i) (body i))
 
 --zaps any articles on disk not in the passed feed
 deleteCache :: Config -> Feed -> IO()
-deleteCache cfg feed = undefined
-
+deleteCache cfg feed = do
+                        savedHashes <- getDirectoryContents (cache cfg)
+                        let toDelete = savedHashes \\ liveHashes
+                        mapM_ removeFile toDelete
+                        
+                        where liveHashes = map
+                                            (show .
+                                                fromMaybe
+                                                    (error "It should be impossible for a Nothing to be here!")
+                                                    . bodyhash)
+                                                        (items feed)
+                         
 hashFeed :: Feed -> Feed
 hashFeed feed = feed{items=map (\(a,h) -> a{bodyhash=Just h}) 
                                (zip (items feed) 
@@ -111,7 +122,7 @@ transform feed = do
 
                     return feed{items=articles}
                     
-                    where transpairs = map (\a -> (transformed a, a)) (items feed)
+                    where --transpairs = map (\a -> (transformed a, a)) (items feed)
                           applyTransforms :: Article -> IO Article
                           applyTransforms article = foldM (\acc f -> (f acc)) article
                                                              (transforms feed)
