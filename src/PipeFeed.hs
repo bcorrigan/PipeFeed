@@ -95,8 +95,10 @@ writeCache cfg feed = mapM_ (\i -> writeFile (mkPath cfg i) (body i))
 deleteCache :: Config -> Feed -> IO()
 deleteCache cfg feed = do
                         savedHashes <- getDirectoryContents (cache cfg)
-                        let toDelete = savedHashes \\ liveHashes
-                        mapM_ removeFile toDelete
+                        
+                        let toDelete = filter (not . isPrefixOf ".") savedHashes \\ liveHashes
+                        print toDelete
+                        mapM_ (\hash -> removeFile $ cache cfg ++ "/" ++ hash) toDelete
                         
                         where liveHashes = map
                                             (show .
