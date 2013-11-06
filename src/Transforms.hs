@@ -1,15 +1,17 @@
 module Transforms where
 
 import Text.Regex.TDFA ((=~))
-import Network.URI
-import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
+--import Network.URI
+--import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
+import Util
 import Types
 
 --fetches full length version of article and packs into body
 fetchfull::Article -> IO Article
 fetchfull article = do 
-                        rsp <- simpleHTTP (getRequest $ itemurl article)
-                        newbody <- getResponseBody rsp
+                        print $ itemurl article
+                        newbody <- grabUrl $ itemurl article
+                        print newbody
                         return $ article { body=newbody }
                         
 --new body only has content between start_re and end_re                        

@@ -8,7 +8,6 @@ import Network.URI
 import Transforms
 import Types as T
 
-
 configure::FilePath -> IO T.Config
 configure path = do
                         cfg <- load[Required path]
