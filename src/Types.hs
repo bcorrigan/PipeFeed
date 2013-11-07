@@ -3,6 +3,10 @@ module Types where
 import Network.URI
 import Data.List(intercalate)
 import Text.Feed.Types as F
+import Text.RSS.Syntax as RSS2
+import Text.RSS1.Syntax as RSS1
+import Text.Atom.Feed as Atom
+import Text.Feed.Types as FT
 
 --probably needs timestamp and other things
 data Article = Article { title :: String
@@ -32,3 +36,14 @@ instance Show Types.Feed where
 --newBody :: Article -> Article
 --newBody a =
 
+--to set atom: fmap contentToStr $ Atom.entrySummary e
+updateItem :: FT.Item -> String -> FT.Item
+updateItem item body = case item of 
+                        FT.RSSItem i -> FT.RSSItem i{rssItemDescription=Just body}
+                        FT.RSS1Item i -> FT.RSS1Item i{itemDesc=Just body}
+                        FT.AtomItem i -> FT.AtomItem i{entrySummary=Just $ HTMLString body}
+                        FT.XMLItem i -> FT.XMLItem i
+                        
+updateFeed :: FT.Feed -> [FT.Item] -> FT.Feed
+updateFeed feed body = undefined
+                        

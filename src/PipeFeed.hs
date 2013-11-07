@@ -62,7 +62,7 @@ fetchFeed feedcfg = do
                                         , itemurl=fromMaybe "Unknown url" (getItemLink item)
                                         , transformed=False
                                         , cached=False
-                                        , itemRec=item
+                                        , itemRec=item 
                                         , bodyhash=Nothing} ) items
                         
                         return ( feedcfg{ items=articles, feedRec=feed } ) 
@@ -145,6 +145,8 @@ write cfg feed = do
                     
                     undefined
 
+
+--a normal language would have .setBody() on polymorphic objects.. haskell has insanity
 serialiseFeed:: T.Feed -> T.Feed 
 serialiseFeed feed = case feedRec of
                         FT.RSSFeed f -> serialiseRSS2 f feed
