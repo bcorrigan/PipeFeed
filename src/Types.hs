@@ -45,5 +45,9 @@ updateItem item body = case item of
                         FT.XMLItem i -> FT.XMLItem i
                         
 updateFeed :: FT.Feed -> [FT.Item] -> FT.Feed
-updateFeed feed body = undefined
-                        
+updateFeed (FT.AtomFeed f) items = FT.AtomFeed f{feedEntries=map toEntry items}
+                                where toEntry (FT.AtomItem i) = i
+updateFeed (FT.RSS1Feed f) items = FT.RSS1Feed f{feedItems=map toFeedItem items}
+                                where toFeedItem (FT.RSS1Item i) = i
+updateFeed (FT.RSSFeed f) items = FT.RSSFeed f{rssChannel=(rssChannel f){rssItems=map toRssItem items}}
+                                where toRssItem (FT.RSSItem i) = i
