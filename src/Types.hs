@@ -44,10 +44,17 @@ updateItem item body = case item of
                         FT.AtomItem i -> FT.AtomItem i{entrySummary=Just $ HTMLString body}
                         FT.XMLItem i -> FT.XMLItem i
                         
-updateFeed :: FT.Feed -> [FT.Item] -> FT.Feed
-updateFeed (FT.AtomFeed f) items = FT.AtomFeed f{feedEntries=map toEntry items}
+updateTextFeedItems :: FT.Feed -> [FT.Item] -> FT.Feed
+updateTextFeedItems (FT.AtomFeed f) items = FT.AtomFeed f{feedEntries=map toEntry items}
                                 where toEntry (FT.AtomItem i) = i
-updateFeed (FT.RSS1Feed f) items = FT.RSS1Feed f{feedItems=map toFeedItem items}
+updateTextFeedItems (FT.RSS1Feed f) items = FT.RSS1Feed f{feedItems=map toFeedItem items}
                                 where toFeedItem (FT.RSS1Item i) = i
-updateFeed (FT.RSSFeed f) items = FT.RSSFeed f{rssChannel=(rssChannel f){rssItems=map toRssItem items}}
+updateTextFeedItems (FT.RSSFeed f) items = FT.RSSFeed f{rssChannel=(rssChannel f){rssItems=map toRssItem items}}
                                 where toRssItem (FT.RSSItem i) = i
+
+updateFeedItems:: Types.Feed -> [Article] -> Types.Feed                                
+updateFeedItems feed articles = feed{items=articles, feedRec=updateTextFeedItems (feedRec feed) $ map itemRec articles}                                
+                                
+updateArticle :: Article -> String -> Article
+updateArticle article newbody = article { body=newbody, itemRec=updateItem (itemRec article) newbody }
+

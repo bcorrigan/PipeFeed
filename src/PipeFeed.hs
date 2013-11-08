@@ -130,7 +130,7 @@ transform feed = do
                         else applyTransforms article
                       ) (items feed) 
 
-                    return feed{items=articles}
+                    return $ updateFeedItems feed articles
                     
                     where applyTransforms :: Article -> IO Article
                           applyTransforms article = foldM (\acc f -> (f acc)) article
