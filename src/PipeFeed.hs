@@ -33,9 +33,8 @@ main = do
         feeds <- mapM transform feeds
         mapM_ (writeCache config) feeds
         mapM_ (deleteCache config) feeds
-        mapM_ (write config) feeds
+        mapM_ (serialiseFeed config) feeds
 
-        
         print feeds
         
         return ()
@@ -138,37 +137,9 @@ transform feed = do
                           applyTransforms article = foldM (\acc f -> (f acc)) article
                                                              (transforms feed)
 --write the resulting feed
---Best way to do this:
---Each feed & item can be cased into underlying type, see http://hackage.haskell.org/package/feed-0.3.9.1/docs/src/Text-Feed-Export.html#xmlFeed
---then simply need to use record syntax to make new body
---then Text.Feed.Export to chuck out the resulting feed
-write :: Config -> T.Feed -> IO()
-write cfg feed = do
-                    
-                    undefined
-
-
---a normal language would have .setBody() on polymorphic objects.. haskell has insanity
-serialiseFeed:: T.Feed -> T.Config -> IO()
-serialiseFeed feed cfg = do
+serialiseFeed:: T.Config -> T.Feed -> IO()
+serialiseFeed cfg feed = do
                         let output = showTopElement $ xmlFeed feedRec
-                        writeFile ((rssStore cfg) ++ (name feed)) output
+                        writeFile (rssStore cfg ++ name feed) output
                      where feedRec=T.feedRec feed   
-
-serialiseAtom:: Atom.Feed -> T.Feed -> T.Feed
-serialiseAtom atom feed = undefined
-
-serialiseRSS1 :: RSS1.Feed -> T.Feed -> T.Feed
-serialiseRSS1 rss feed = undefined
-
-serialiseRSS2 :: RSS2.RSS -> T.Feed -> T.Feed
-serialiseRSS2 rss feed = undefined
-
  
---readConfig :: String -> Config 
---readConfig config = 
-                     
---TODO: 1) readcfg :: IO Config - feeds populated with empty items
---      2) fetchFeeds :: IO Feed -> Feed - from Feed.feedurl. populates Feed.items
---      3) cacheSync :: IO Feed -> IO Feed , sync with items folder - Config.cache++Feed.name, returned Feed ha sonly new items
---      4) writeFeed :: IO Feed , writes out feed as a new rss.xml in Config.rss_store
