@@ -10,6 +10,8 @@ import Text.Atom.Feed as Atom
 import Text.RSS.Syntax as RSS2
 import Text.RSS1.Syntax as RSS1
 import Text.Feed.Types as FT
+import Text.Feed.Export(xmlFeed)
+import Text.XML.Light.Output(showTopElement)
 
 import Network.URI
 import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
@@ -147,12 +149,10 @@ write cfg feed = do
 
 
 --a normal language would have .setBody() on polymorphic objects.. haskell has insanity
-serialiseFeed:: T.Feed -> T.Feed 
-serialiseFeed feed = case feedRec of
-                        FT.RSSFeed f -> serialiseRSS2 f feed
-                        FT.RSS1Feed f -> serialiseRSS1 f feed
-                        FT.AtomFeed f -> serialiseAtom f feed
-                        FT.XMLFeed f -> feed 
+serialiseFeed:: T.Feed -> T.Config -> IO()
+serialiseFeed feed cfg = do
+                        let output = showTopElement $ xmlFeed feedRec
+                        writeFile ((rssStore cfg) ++ (name feed)) output
                      where feedRec=T.feedRec feed   
 
 serialiseAtom:: Atom.Feed -> T.Feed -> T.Feed
