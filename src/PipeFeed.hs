@@ -139,7 +139,8 @@ transform feed = do
 --write the resulting feed
 serialiseFeed:: T.Config -> T.Feed -> IO()
 serialiseFeed cfg feed = do
+                        createDirectoryIfMissing False  $ rssStore cfg
                         let output = showTopElement $ xmlFeed feedRec
-                        writeFile (rssStore cfg ++ name feed) output
+                        writeFile (rssStore cfg ++ "/" ++ name feed ++ ".rss") output
                      where feedRec=T.feedRec feed   
  

@@ -5,6 +5,7 @@ import Text.Regex.TDFA ((=~))
 --import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
 import Util
 import Types
+import Control.Concurrent
 
 --fetches full length version of article and packs into body
 fetchfull::Article -> IO Article
@@ -12,6 +13,7 @@ fetchfull article = do
                         print $ itemurl article
                         newbody <- grabUrl $ itemurl article
                         print newbody
+                        threadDelay $ 10*1000*1000
                         return $ updateArticle article newbody
                         
 --new body only has content between start_re and end_re                        

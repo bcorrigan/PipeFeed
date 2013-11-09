@@ -44,6 +44,7 @@ getFeed cfg feed = do
                                    _ -> error "Unknown transform?"
                                 ) transformNames 
                                 
+                        --use a maybe, get rid of warning        
                         return Feed{name = feed, items = [], feedurl = url, transforms = transforms}
                         
 
