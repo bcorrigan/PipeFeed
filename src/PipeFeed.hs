@@ -18,6 +18,7 @@ import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
 import Data.Maybe(fromMaybe,maybe)
 import Data.Hashable(hash) 
 import System.Directory
+import System.Environment
 import Control.Monad(foldM)
 import Data.List
 import System.IO.Strict as S
@@ -27,7 +28,12 @@ import System.IO.Strict as S
 
 main::IO()
 main = do 
-        config <- Conf.configure "/home/bc/workspace/PipeFeed/feeds.config"
+        args <- getArgs
+        let cfgLoc = if not (null args)
+                        then head args
+                        else "~/.pipefeedrc"
+        print $ "Using " ++ cfgLoc ++ " as config file." 
+        config <- Conf.configure cfgLoc
         feeds <- mapM fetchFeed (feeds config)
         feeds <- mapM (loadCache config . hashFeed) feeds
         feeds <- mapM transform feeds
@@ -35,7 +41,7 @@ main = do
         mapM_ (deleteCache config) feeds
         mapM_ (serialiseFeed config) feeds
 
-        print feeds
+        print "Completed successfully"
         
         return ()
 
@@ -44,7 +50,7 @@ fetchFeed feedcfg = do
                         let url = feedurl feedcfg
                         rsp <- simpleHTTP (getRequest url) -- >>= fmap (take 100) . getResponseBody
                         feedText <- getResponseBody rsp
-                        print feedText
+                        --print feedText
                         let feed = fromMaybe (error "Can't get feed") (parseFeedString feedText) 
                         
                         let items = Query.feedItems feed
@@ -52,10 +58,7 @@ fetchFeed feedcfg = do
                         
                         let author = fromMaybe "unknown" (getFeedAuthor feed)
                         
-                        print author
-                        
-                        print $ length items
-                        print title
+                        print $ "Fetched " ++ show (length items) ++ " items from " ++ name feedcfg
                         
                         let articles = map (\item ->
                                       Article{title=fromMaybe "Unknown title" (getItemTitle item)
@@ -113,7 +116,8 @@ deleteCache cfg feed = do
                         savedHashes <- getDirectoryContents (cache cfg)
                         
                         let toDelete = filter (not . isPrefixOf ".") savedHashes \\ liveHashes
-                        print toDelete
+                        print $ "Deleting " ++ show (length toDelete) ++
+                            " items from " ++ name feed ++ " cache." 
                         mapM_ (\hash -> removeFile $ cache cfg ++ "/" ++ hash) toDelete
                         
                         where liveHashes = map

@@ -10,9 +10,8 @@ import Control.Concurrent
 --fetches full length version of article and packs into body
 fetchfull::Article -> IO Article
 fetchfull article = do 
-                        print $ itemurl article
+                        print $ "Fetching full article from " ++ itemurl article
                         newbody <- grabUrl $ itemurl article
-                        print newbody
                         threadDelay $ 10*1000*1000
                         return $ updateArticle article newbody
                         

@@ -17,15 +17,8 @@ configure path = do
                         feedNames <- require cfg "feeds" :: IO [String]
                         
                         feeds <- mapM (getFeed cfg) feedNames
-                                                
-                        print feedNames
-                        print feeds
-                        print cache
                         
-                        return T.Config{feeds = feeds, cache = cache, rssStore = output}
-
---get_feeds::[String] -> IO([Feeds])
---get_feeds feeds = map get_feed feeds 
+                        return T.Config{feeds = feeds, cache = cache, rssStore = output} 
 
 getFeed::C.Config -> String -> IO Feed
 getFeed cfg feed = do
