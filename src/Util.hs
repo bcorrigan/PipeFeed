@@ -1,16 +1,22 @@
 module Util where
 
-import Network.Browser
-import Network.HTTP.Base (rspBody)
-import Network.HTTP (getRequest)
+import Network.Curl.Download
+import Data.Either
 
-grabUrl :: String -> IO String
-grabUrl url = fmap (rspBody . snd) . browse $ do
-    -- Disable logging output
-    setErrHandler $ const (return ())
-    setOutHandler $ const (return ())
+grabUrl :: String -> IO (Maybe String)
+grabUrl url = do
+                result <- openURIString url
+                case result of
+                    Left error -> do 
+                        print $ "Error fetching " ++ url ++ " Error: " ++ error
+                        return Nothing
+                    Right body ->
+                        return $ Just body
+    
+--for error handling Eithers - crap haskell stdlib again?
+isLeft (Left _) = True
+isLeft _        = False
 
-    setAllowRedirects True
-    request $ getRequest url
-    
-    
+--haskell doesn't have basic triple-or-above manip funcs, wtf?
+fst3::(a,b,c)->a
+fst3 (a,b,c) = a

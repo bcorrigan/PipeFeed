@@ -1,6 +1,5 @@
 module Types where
 
-import Network.URI
 import Data.List(intercalate)
 import Text.Feed.Types as F
 import Text.RSS.Syntax as RSS2
@@ -22,7 +21,7 @@ data Feed = Feed { name :: String
                  , items :: [Article]
                  , feedurl :: String
                  , feedRec :: F.Feed
-                 , transforms :: [Article -> IO Article]
+                 , transforms :: [Article -> IO (Maybe Article)]
                  } 
                  
 data Config = Config { feeds :: [Types.Feed]

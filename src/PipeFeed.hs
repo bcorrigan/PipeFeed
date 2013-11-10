@@ -2,6 +2,7 @@ module Main where
 
 import Config as Conf
 import Types as T
+import Util
 import Transforms
 
 import Text.Feed.Import 
@@ -13,9 +14,7 @@ import Text.Feed.Types as FT
 import Text.Feed.Export(xmlFeed)
 import Text.XML.Light.Output(showTopElement)
 
-import Network.URI
-import Network.HTTP(simpleHTTP,getRequest,getResponseBody)
-import Data.Maybe(fromMaybe,maybe)
+import Data.Maybe(fromMaybe,maybe,catMaybes)
 import Data.Hashable(hash) 
 import System.Directory
 import System.Environment
@@ -35,7 +34,7 @@ main = do
         print $ "Using " ++ cfgLoc ++ " as config file." 
         config <- Conf.configure cfgLoc
         feeds <- mapM fetchFeed (feeds config)
-        feeds <- mapM (loadCache config . hashFeed) feeds
+        feeds <- mapM (loadCache config . hashFeed) (catMaybes feeds)
         feeds <- mapM transform feeds
         mapM_ (writeCache config) feeds
         mapM_ (deleteCache config) feeds
@@ -45,22 +44,24 @@ main = do
         
         return ()
 
-fetchFeed::T.Feed -> IO T.Feed 
+fetchFeed::T.Feed -> IO (Maybe T.Feed) 
 fetchFeed feedcfg = do
-                        let url = feedurl feedcfg
-                        rsp <- simpleHTTP (getRequest url) -- >>= fmap (take 100) . getResponseBody
-                        feedText <- getResponseBody rsp
-                        --print feedText
-                        let feed = fromMaybe (error "Can't get feed") (parseFeedString feedText) 
+                        rsp <-  grabUrl $ feedurl feedcfg
+                        case rsp of
+                            Nothing -> do
+                                print $ "Error fetching " ++ feedurl feedcfg
+                                return Nothing
+                            Just feedText -> do
+                                let feed = fromMaybe (error "Can't get feed") (parseFeedString feedText) 
                         
-                        let items = Query.feedItems feed
-                        let title = getFeedTitle feed
+                                let items = Query.feedItems feed
+                                let title = getFeedTitle feed
                         
-                        let author = fromMaybe "unknown" (getFeedAuthor feed)
+                                let author = fromMaybe "unknown" (getFeedAuthor feed)
                         
-                        print $ "Fetched " ++ show (length items) ++ " items from " ++ name feedcfg
+                                print $ "Fetched " ++ show (length items) ++ " items from " ++ name feedcfg
                         
-                        let articles = map (\item ->
+                                let articles = map (\item ->
                                       Article{title=fromMaybe "Unknown title" (getItemTitle item)
                                         , body=maybe "nowt" fst3 (getItemEnclosure item)
                                         , itemurl=fromMaybe "Unknown url" (getItemLink item)
@@ -69,11 +70,7 @@ fetchFeed feedcfg = do
                                         , itemRec=item 
                                         , bodyhash=Nothing} ) items
                         
-                        return ( feedcfg{ items=articles, feedRec=feed } ) 
-
---haskell doesn't have basic triple-or-above manip funcs, wtf?
-fst3::(a,b,c)->a
-fst3 (a,b,c) = a
+                                return ( Just $ feedcfg{ items=articles, feedRec=feed } ) 
 
 --any on disk should be loaded
 --this loads body into matching article, and marks that article as transformed
@@ -134,19 +131,22 @@ hashFeed feed = feed{items=map (\(a,h) -> a{bodyhash=Just h})
 
 --apply the transforms in order
 --also marks transformed
+--todo one day implement some sort of "error article" in case of error, so that feed consumer can see issue in feed
 transform :: T.Feed -> IO T.Feed
 transform feed = do
                     articles<-mapM (\article -> 
                         if transformed article 
-                        then return article{transformed=True}
+                        then return $ Just $ article{transformed=True}
                         else applyTransforms article
                       ) (items feed) 
 
-                    return $ updateFeedItems feed articles
+                    return $ updateFeedItems feed (catMaybes articles)
                     
-                    where applyTransforms :: Article -> IO Article
-                          applyTransforms article = foldM (\acc f -> (f acc)) article
-                                                             (transforms feed)
+                    where applyTransforms :: Article -> IO (Maybe Article)
+                          applyTransforms article = foldM (\acc f -> case acc of
+                                                                        Nothing -> return Nothing
+                                                                        Just art -> f art) (Just article)
+                                                                                                (transforms feed)
 --write the resulting feed
 serialiseFeed:: T.Config -> T.Feed -> IO()
 serialiseFeed cfg feed = do
