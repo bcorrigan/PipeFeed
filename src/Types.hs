@@ -31,10 +31,12 @@ data Config = Config { feeds :: [Types.Feed]
                      } deriving Show
                      
 instance Show Types.Feed where
-        show f = "Feed. name: " ++ name f ++ " feedurl: " ++ (show $ feedurl f) ++ " num items: " ++ (show $ length $ items f) ++ " Items:" ++ (intercalate ", " (map show (items f))) ++ " num transforms: " ++ (show $ length $ transforms f)
-
---newBody :: Article -> Article
---newBody a =
+        show f = "Feed. name: " ++ name f ++ " feedurl: " ++ show (feedurl f) ++
+            " num items: " ++
+            show (length $ items f) ++
+            " Items:" ++
+            intercalate ", " (map show (items f)) ++
+            " num transforms: " ++ show (length $ transforms f)
 
 --to set atom: fmap contentToStr $ Atom.entrySummary e
 updateItem :: FT.Item -> String -> FT.Item

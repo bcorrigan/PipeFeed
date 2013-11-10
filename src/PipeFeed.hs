@@ -76,32 +76,35 @@ fst3 (a,b,c) = a
 --this loads body into matching article, and marks that article as transformed
 loadCache :: T.Config -> T.Feed -> IO T.Feed
 loadCache cfg feed = do
-                        createDirectoryIfMissing False  $ cache cfg
-
-                        existing <- mapM (doesFileExist . mkPath cfg) 
+                        createDirectoryIfMissing True  $ cacheDir cfg feed
+                        
+                        existing <- mapM (doesFileExist . mkPath (cacheDir cfg feed) ) 
                                                                     (items feed)                 
                         bodiesCached <- mapM (\ (exists, item) -> if exists
                                                 then readFile item  
-                                                else return $ (body item, False) )
+                                                else return (body item, False) )
                                                   (zip existing (items feed))
                                                 
-                        let newItems= map (\ (body, item) -> item{body=(fst body), cached=(snd body)}) (zip bodiesCached (items feed))
+                        let newItems= map (\ (body, item) -> item{body = fst body, cached = snd body}) (zip bodiesCached (items feed))
                         
                         return feed{items = markTransformed newItems existing}
                         
                         where readFile item = do 
-                                                body <- S.readFile $ mkPath cfg item
+                                                body <- S.readFile $ mkPath (cacheDir cfg feed) item
                                                 return (body,True)
+
+cacheDir :: T.Config -> T.Feed -> String
+cacheDir cfg feed = cache cfg ++ "/" ++ name feed
 
 markTransformed :: [Article] -> [Bool] -> [Article]
 markTransformed items transfms = map (\ (item, transformed) -> item{transformed=transformed}) (zip items transfms)
 
-mkPath :: Config -> Article -> FilePath
-mkPath cfg item = cache cfg ++ "/" ++ show (fromMaybe 0 (bodyhash item))
+mkPath :: String -> Article -> FilePath
+mkPath path item = path ++ "/" ++ show (fromMaybe 0 (bodyhash item))
 
 --writes any uncached
 writeCache  :: Config -> T.Feed -> IO ()
-writeCache cfg feed = mapM_ (\i -> writeFile (mkPath cfg i) (body i))    
+writeCache cfg feed = mapM_ (\i -> writeFile (mkPath (cacheDir cfg feed) i) (body i))    
                             (filter (not . cached) (items feed))
 
 --zaps any articles on disk not in the passed feed
@@ -148,3 +151,7 @@ serialiseFeed cfg feed = do
                         writeFile (rssStore cfg ++ "/" ++ name feed ++ ".rss") output
                      where feedRec=T.feedRec feed   
  
+
+ --cache should write to different dirs
+ --error handling
+ --command line argument should be path of config file
