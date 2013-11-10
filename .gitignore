@@ -1,2 +1,6 @@
 dist/
 cabale-dev/
+test
+cabal-dev
+.settings
+.dist-buildwrapper
