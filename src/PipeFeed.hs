@@ -110,12 +110,12 @@ writeCache cfg feed = mapM_ (\i -> writeFile (mkPath (cacheDir cfg feed) i) (bod
 --zaps any articles on disk not in the passed feed
 deleteCache :: Config -> T.Feed -> IO()
 deleteCache cfg feed = do
-                        savedHashes <- getDirectoryContents (cache cfg)
+                        savedHashes <- getDirectoryContents (cacheDir cfg feed)
                         
                         let toDelete = filter (not . isPrefixOf ".") savedHashes \\ liveHashes
                         print $ "Deleting " ++ show (length toDelete) ++
                             " items from " ++ name feed ++ " cache." 
-                        mapM_ (\hash -> removeFile $ cache cfg ++ "/" ++ hash) toDelete
+                        mapM_ (\hash -> removeFile $ cacheDir cfg feed ++ "/" ++ hash) toDelete
                         
                         where liveHashes = map
                                             (show .
