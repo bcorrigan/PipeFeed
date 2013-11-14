@@ -70,7 +70,13 @@ fetchFeed feedcfg = do
                                         , itemRec=item 
                                         , bodyhash=Nothing} ) items
                         
-                                return ( Just $ feedcfg{ items=articles, feedRec=feed } ) 
+                                return ( Just $ feedcfg{ items=articles, feedRec=feed, extension=extension feed } ) 
+                                
+                                where extension feed = case feed of
+                                                            AtomFeed _ -> ".atom"
+                                                            RSSFeed _ -> ".rss"
+                                                            RSS1Feed _ -> ".rss"
+                                                            XMLFeed _ -> ".xml"
 
 --any on disk should be loaded
 --this loads body into matching article, and marks that article as transformed
@@ -152,7 +158,7 @@ serialiseFeed:: T.Config -> T.Feed -> IO()
 serialiseFeed cfg feed = do
                         createDirectoryIfMissing False  $ rssStore cfg
                         let output = showTopElement $ xmlFeed feedRec
-                        writeFile (rssStore cfg ++ "/" ++ name feed ++ ".rss") output
+                        writeFile (rssStore cfg ++ "/" ++ name feed ++ extension feed) output
                      where feedRec=T.feedRec feed   
  
 

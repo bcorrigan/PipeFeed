@@ -22,6 +22,7 @@ data Feed = Feed { name :: String
                  , feedurl :: String
                  , feedRec :: F.Feed
                  , transforms :: [Article -> IO (Maybe Article)]
+                 , extension :: String 
                  } 
                  
 data Config = Config { feeds :: [Types.Feed]
