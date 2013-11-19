@@ -57,15 +57,13 @@ grabUrl url = grabUrlHack url Nothing
 grabUrlHack :: String -> Maybe [Header] -> IO (Maybe String)
 grabUrlHack url headers =
     do resp <- simpleHTTP request
-       print $ "Got cookies passed in?" ++ (show $ length reqCookies )
-       print $ "Response:" ++ (show resp)
        case resp of
          Left x -> do
                     print x
                     return Nothing
          Right r -> 
              case rspCode r of
-               (2,_,_) -> trace ("0" ++ rspBody r) $ return $ Just (rspBody r)
+               (2,_,_) -> return $ Just (rspBody r)
                (3,_,_) -> -- A HTTP redirect
                  case findHeader HdrLocation r of
                    Nothing -> return $ Just (show r)
@@ -77,9 +75,8 @@ grabUrlHack url headers =
                              rqBody = ""}
           uri = fromJust $ parseURI $ replace "////" "//" url
           userAgent = mkHeader HdrUserAgent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:25.0) Gecko/20100101 Firefox/25.0"
-          respCookie r = trace ("POOP:" ++ show (filterCookies r)) filterCookies r
           reqCookies = fromMaybe [] headers
-          recurseCookies r = reqCookies ++ map convertCookie (respCookie r)
+          recurseCookies r = reqCookies ++ map convertCookie (filterCookies r)
           convertCookie header = mkHeader HdrCookie $ hdrValue header
           filterCookies = retrieveHeaders HdrSetCookie
           
